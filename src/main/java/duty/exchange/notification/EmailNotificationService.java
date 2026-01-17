@@ -106,6 +106,7 @@ public class EmailNotificationService {
         }
         
         SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom("princechaudhary4366@gmail.com");
         message.setTo(to);
         message.setSubject(subject);
         message.setText(body);
