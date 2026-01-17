@@ -4,8 +4,17 @@ import duty.exchange.dto.DutyExchangeRequestDTO;
 import duty.exchange.dto.DutyExchangeResponseDTO;
 import duty.exchange.service.BFormGenerationService;
 import duty.exchange.service.DutyExchangeService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -22,6 +31,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/duty-exchange")
 @CrossOrigin(origins = "*")
+@Tag(name = "Duty Exchange", description = "APIs for managing examination duty exchange requests")
 public class DutyExchangeController {
     
     @Autowired
@@ -56,9 +66,17 @@ public class DutyExchangeController {
     /**
      * Create a new duty exchange request
      */
+    @Operation(summary = "Create duty exchange request", 
+               description = "Faculty member creates a new duty exchange request")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Request created successfully"),
+        @ApiResponse(responseCode = "400", description = "Invalid request data"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized")
+    })
     @PostMapping("/requests")
     public ResponseEntity<DutyExchangeResponseDTO> createRequest(
             @Valid @RequestBody DutyExchangeRequestDTO requestDTO,
+            @Parameter(description = "ID of the requesting faculty", required = true)
             @RequestHeader("X-User-Id") Long requesterId) {
         
         DutyExchangeResponseDTO response = dutyExchangeService
@@ -91,12 +109,29 @@ public class DutyExchangeController {
     }
     
     /**
-     * Get all pending duty exchange requests
+     * Get all pending duty exchange requests with pagination
      */
+    @Operation(summary = "Get pending requests", 
+               description = "Retrieves all pending duty exchange requests with pagination support")
     @GetMapping("/requests/pending")
-    public ResponseEntity<List<DutyExchangeResponseDTO>> getPendingRequests() {
-        List<DutyExchangeResponseDTO> responses = dutyExchangeService.getPendingRequests();
-        return ResponseEntity.ok(responses);
+    public ResponseEntity<Map<String, Object>> getPendingRequests(
+            @Parameter(description = "Page number (0-based)")
+            @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Page size")
+            @RequestParam(defaultValue = "10") int size,
+            @Parameter(description = "Sort by field")
+            @RequestParam(defaultValue = "requestedAt") String sortBy) {
+        
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sortBy).descending());
+        Page<DutyExchangeResponseDTO> responsePage = dutyExchangeService.getPendingRequestsPaginated(pageable);
+        
+        Map<String, Object> response = new HashMap<>();
+        response.put("requests", responsePage.getContent());
+        response.put("currentPage", responsePage.getNumber());
+        response.put("totalItems", responsePage.getTotalElements());
+        response.put("totalPages", responsePage.getTotalPages());
+        
+        return ResponseEntity.ok(response);
     }
     
     /**

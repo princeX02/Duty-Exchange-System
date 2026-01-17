@@ -3,6 +3,8 @@ package duty.exchange.repository;
 import duty.exchange.model.ApprovalStatus;
 import duty.exchange.model.DutyExchangeRequest;
 import duty.exchange.model.Faculty;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -25,6 +27,8 @@ public interface DutyExchangeRepository extends JpaRepository<DutyExchangeReques
     List<DutyExchangeRequest> findByRecipient(Faculty recipient);
     
     List<DutyExchangeRequest> findByStatus(ApprovalStatus status);
+    
+    Page<DutyExchangeRequest> findByStatus(ApprovalStatus status, Pageable pageable);
     
     List<DutyExchangeRequest> findByRequesterAndStatus(Faculty requester, ApprovalStatus status);
     

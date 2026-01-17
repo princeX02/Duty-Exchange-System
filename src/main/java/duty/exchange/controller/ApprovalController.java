@@ -5,6 +5,11 @@ import duty.exchange.dto.DutyExchangeResponseDTO;
 import duty.exchange.model.Faculty;
 import duty.exchange.service.ApprovalWorkflowService;
 import duty.exchange.service.ValidationService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/duty-exchange/approvals")
 @CrossOrigin(origins = "*")
+@Tag(name = "Approvals", description = "APIs for approving or rejecting duty exchange requests")
 public class ApprovalController {
     
     @Autowired
@@ -27,9 +33,17 @@ public class ApprovalController {
     /**
      * Approve a duty exchange request
      */
+    @Operation(summary = "Approve request", 
+               description = "Approver (Dean/HOD) approves a pending duty exchange request")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Request approved successfully"),
+        @ApiResponse(responseCode = "400", description = "Request not in pending state"),
+        @ApiResponse(responseCode = "404", description = "Request not found")
+    })
     @PostMapping("/approve")
     public ResponseEntity<DutyExchangeResponseDTO> approveRequest(
             @Valid @RequestBody ApprovalRequestDTO approvalDTO,
+            @Parameter(description = "ID of the approving faculty", required = true)
             @RequestHeader("X-User-Id") Long approverId) {
         
         Faculty approver = validationService.validateAndGetFaculty(approverId);

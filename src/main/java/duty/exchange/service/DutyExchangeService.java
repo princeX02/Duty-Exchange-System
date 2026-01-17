@@ -12,6 +12,8 @@ import duty.exchange.events.DutyExchangeRequestedEvent;
 import duty.exchange.exception.InvalidDutyExchangeException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -129,6 +131,15 @@ public class DutyExchangeService {
         return requests.stream()
             .map(this::convertToResponseDTO)
             .collect(Collectors.toList());
+    }
+    
+    /**
+     * Get all pending duty exchange requests with pagination
+     */
+    public Page<DutyExchangeResponseDTO> getPendingRequestsPaginated(Pageable pageable) {
+        Page<DutyExchangeRequest> requests = dutyExchangeRepository
+            .findByStatus(ApprovalStatus.PENDING, pageable);
+        return requests.map(this::convertToResponseDTO);
     }
     
     /**
